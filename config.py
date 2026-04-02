@@ -2,8 +2,8 @@
 
 N_RANDOM = 100_000  # how many random points to try
 N_GRID = 10_000     # points for grid search
-N_CANDIDATES = 2048 # Sobol points for initial sampling (power of 2)
-N_RESTARTS = 10     # restarts for optimizer in Bayes
+N_CANDIDATES = 4096 # Sobol points for initial sampling (power of 2)
+N_RESTARTS = 20     # restarts for optimizer in Bayes 
 KAPPA = 1.96        # exploration in UCB: higher = more exploration
 ACQ_FUNC = 'ucb'    
 
@@ -11,8 +11,8 @@ DEFAULT_METHOD = 'bayes'
 
 # Override for specific functions
 METHOD_PER_FUNCTION = {
-    # 'function_1': 'random',
-    # 'function_2': 'grid',
+    'function_1': 'grid',  
+    'function_2': 'grid',  
     # 'function_3': 'bayes',
     # 'function_4': 'surrogate',
     # 'function_5': 'manual',

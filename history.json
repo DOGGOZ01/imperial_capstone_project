@@ -1,0 +1,34 @@
+{
+  "function_1": {
+    "best_value": 0.0,
+    "was_improved": true
+  },
+  "function_2": {
+    "best_value": 0.0,
+    "was_improved": true
+  },
+  "function_3": {
+    "best_value": -0.034835313350078584,
+    "was_improved": true
+  },
+  "function_4": {
+    "best_value": -4.025542281908162,
+    "was_improved": true
+  },
+  "function_5": {
+    "best_value": 1088.8596181962705,
+    "was_improved": true
+  },
+  "function_6": {
+    "best_value": -0.7142649478202404,
+    "was_improved": true
+  },
+  "function_7": {
+    "best_value": 1.3649683044991994,
+    "was_improved": true
+  },
+  "function_8": {
+    "best_value": 9.598482002566342,
+    "was_improved": true
+  }
+}
