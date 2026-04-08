@@ -11,91 +11,127 @@ from config import N_GRID, N_RANDOM
 
 HISTORY_FILE = 'history.json'
 
-def load_history():
+
+def load_history() -> dict:
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, 'r') as f:
                 return json.load(f)
-        except:
+        except Exception:
             return {}
     return {}
 
-def save_history(history):
+
+def save_history(history: dict):
     with open(HISTORY_FILE, 'w') as f:
         json.dump(history, f, indent=2)
 
-def should_use_tight_search(folder_name: str, current_best_y: float) -> bool:
-    history = load_history()
-    
-    if folder_name not in history:
-        return False
-    
-    prev_best = history[folder_name].get('best_value', 0)
-    
-    improvement = current_best_y - prev_best
-    
-    relative_improvement = abs(improvement) / (abs(prev_best) + 1e-10)
-    
-    no_progress = improvement < 1e-6 or relative_improvement < 0.005
-    
-    return no_progress
 
-def update_history(folder_name: str, current_best_y: float):
+def get_history_entry(folder_name: str) -> dict:
+    return load_history().get(folder_name, {})
+
+
+def update_history(folder_name: str, recommended_x: np.ndarray, data_best_y: float):
     history = load_history()
-    
     if folder_name not in history:
         history[folder_name] = {}
-    
-    history[folder_name]['best_value'] = float(current_best_y)
+
+    prev_best = history[folder_name].get('best_value', -np.inf)
+
+    if data_best_y > prev_best:
+        history[folder_name]['best_value'] = float(data_best_y)
+        history[folder_name]['was_improved'] = True
+    else:
+        history[folder_name]['was_improved'] = False
+
+    history[folder_name]['recommended_x'] = recommended_x.tolist()
+
     save_history(history)
 
-def adaptive_bayes_params(dims: int, num_points: int):
+
+def should_use_tight_search(folder_name: str, data_best_y: float) -> bool:
+    from config import FORCE_GLOBAL        
+    if folder_name in FORCE_GLOBAL:          
+        return False                         
+    entry = get_history_entry(folder_name)
+    prev_best = entry.get('best_value', -np.inf)
+
+    if prev_best == -np.inf:
+        return False  
+
+    improvement = data_best_y - prev_best
+    relative_improvement = abs(improvement) / (abs(prev_best) + 1e-10)
+    return improvement < 1e-6 or relative_improvement < 0.005
+
+
+def get_search_center(folder_name: str, X: np.ndarray, y: np.ndarray) -> np.ndarray:
+    entry = get_history_entry(folder_name)
+    if 'recommended_x' in entry:
+        return np.array(entry['recommended_x'])
+    if 'best_x' in entry and entry['best_x'] is not None:
+        return np.array(entry['best_x'])
+    return X[np.argmax(y)]
+
+
+def adaptive_bayes_params(dims: int, num_points: int) -> tuple[str, float]:
     if num_points < 20 or dims >= 6:
         return 'ucb', KAPPA + (1.0 if dims >= 6 else 0.0)
     return 'ei', KAPPA
+
 
 def run_method(method: str, X: np.ndarray, y: np.ndarray,
                folder_name: str) -> tuple[np.ndarray, str]:
     dims = X.shape[1]
     num_points = len(y)
-    current_best_y = y.max()
+    data_best_y = float(y.max())
 
     if method == 'random':
-        return method_random(X, y), f"random (n={N_RANDOM})"
+        result = method_random(X, y)
+        update_history(folder_name, result, data_best_y)
+        return result, f"random (n={N_RANDOM})"
 
     elif method == 'grid':
         points_per_dim = int(round(N_GRID ** (1.0 / dims)))
-        return method_grid(X, y), f"grid ({points_per_dim}^{dims}≈{points_per_dim**dims})"
+        result = method_grid(X, y)
+        update_history(folder_name, result, data_best_y)
+        return result, f"grid ({points_per_dim}^{dims}≈{points_per_dim**dims})"
 
     elif method == 'bayes':
         acq_type, kappa_val = adaptive_bayes_params(dims, num_points)
-        tight = should_use_tight_search(folder_name, current_best_y)
-        mode = "tight" if tight else "global"
-        result = method_bayes(X, y, kappa=kappa_val, acq_func=acq_type, tight_search=tight)
-        update_history(folder_name, current_best_y)
-        return result, f"bayes/{acq_type}({mode}) κ={kappa_val:.2f}"
+        tight = should_use_tight_search(folder_name, data_best_y)
+        center = get_search_center(folder_name, X, y) if tight else None
+        result = method_bayes(
+            X, y, kappa=kappa_val, acq_func=acq_type,
+            tight_search=tight, best_x_known=center,
+        )
+        update_history(folder_name, result, data_best_y)
+        return result, f"bayes/{acq_type}({'tight' if tight else 'global'}) κ={kappa_val:.2f}"
 
     elif method == 'auto':
         if dims <= 3:
-            return method_grid(X, y), f"auto/grid"
-        else:
-            acq_type, kappa_val = adaptive_bayes_params(dims, num_points)
-            tight = should_use_tight_search(folder_name, current_best_y)
-            mode = "tight" if tight else "global"
-            result = method_bayes(X, y, kappa=kappa_val, acq_func=acq_type, tight_search=tight)
-            update_history(folder_name, current_best_y)
-            return result, f"auto/bayes({mode}) κ={kappa_val:.2f}"
+            result = method_grid(X, y)
+            update_history(folder_name, result, data_best_y)
+            return result, "auto/grid"
+        acq_type, kappa_val = adaptive_bayes_params(dims, num_points)
+        tight = should_use_tight_search(folder_name, data_best_y)
+        center = get_search_center(folder_name, X, y) if tight else None
+        result = method_bayes(
+            X, y, kappa=kappa_val, acq_func=acq_type,
+            tight_search=tight, best_x_known=center,
+        )
+        update_history(folder_name, result, data_best_y)
+        return result, f"auto/bayes({'tight' if tight else 'global'}) κ={kappa_val:.2f}"
 
     elif method == 'surrogate':
         model_name = 'GradBoost' if num_points >= 20 else 'RandomForest'
         result = method_surrogate(X, y)
-        update_history(folder_name, current_best_y)
+        update_history(folder_name, result, data_best_y)
         return result, f"surrogate ({model_name})"
 
     elif method == 'manual':
         point = method_manual(X, y, folder_name)
-        update_history(folder_name, current_best_y)
+        update_history(folder_name, point, data_best_y)
         return point, f"manual → plots/{folder_name}_scatter.png"
 
     else:
-        raise ValueError(f"Method error")
+        raise ValueError(f"Unknown method: '{method}'")

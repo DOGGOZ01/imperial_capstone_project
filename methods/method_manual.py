@@ -35,5 +35,4 @@ def method_manual(X: np.ndarray, y: np.ndarray, folder_name: str = 'function_?')
     plt.close(fig)
     print(f"   [manual] Saved plot to {plot_path}")
 
-    # Auto-pick
     return method_surrogate(X, y)

@@ -1,9 +1,5 @@
-# Ignore data folder (contains input/output files)
 data/
-
-# Ignore Python cache
 __pycache__/
-
-# Ignore log files
+plots/
 run.txt
 run_prev.txt

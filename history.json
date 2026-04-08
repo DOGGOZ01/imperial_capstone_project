@@ -1,34 +1,84 @@
 {
   "function_1": {
-    "best_value": 0.0,
-    "was_improved": true
+    "best_value": 7.710875114502849e-16,
+    "was_improved": false,
+    "recommended_x": [
+      0.5983857111438997,
+      0.24453018969767903
+    ]
   },
   "function_2": {
-    "best_value": 0.0,
-    "was_improved": true
+    "best_value": 0.6112052157614438,
+    "recommended_x": [
+      0.6713107531823396,
+      0.02869771982227787
+    ],
+    "was_improved": false
   },
   "function_3": {
-    "best_value": -0.034835313350078584,
-    "was_improved": true
+    "best_value": -0.031,
+    "was_improved": false,
+    "recommended_x": [
+      0.9659948489488087,
+      0.9413598305723256,
+      0.44783550781509773
+    ]
   },
   "function_4": {
-    "best_value": -4.025542281908162,
-    "was_improved": true
+    "best_value": -0.648,
+    "was_improved": false,
+    "recommended_x": [
+      0.27350428759340684,
+      0.44359687911251056,
+      0.40820594893541573,
+      0.14756272478010607
+    ]
   },
   "function_5": {
-    "best_value": 1088.8596181962705,
-    "was_improved": true
+    "best_value": 1302.29,
+    "recommended_x": [
+      0.11987922582428101,
+      0.7001003069959533,
+      0.8794841797090803,
+      0.957643898670113
+    ],
+    "was_improved": false
   },
   "function_6": {
-    "best_value": -0.7142649478202404,
-    "was_improved": true
+    "best_value": -0.39,
+    "was_improved": false,
+    "recommended_x": [
+      0.656572501993329,
+      0.1587057732121874,
+      0.7370653508169537,
+      0.8493596819090317,
+      0.021675709453122374
+    ]
   },
   "function_7": {
-    "best_value": 1.3649683044991994,
-    "was_improved": true
+    "best_value": 1.846,
+    "was_improved": false,
+    "recommended_x": [
+      0.057895541971385245,
+      0.011812836708676278,
+      0.8113780141445817,
+      0.25132605857108625,
+      0.37061148411595257,
+      0.8157701848839499
+    ]
   },
   "function_8": {
-    "best_value": 9.598482002566342,
-    "was_improved": true
+    "best_value": 9.803,
+    "was_improved": false,
+    "recommended_x": [
+      0.03275922578340891,
+      0.0683910353686972,
+      0.0337091504668559,
+      0.3684067303106869,
+      0.3893435845698912,
+      0.8759504280813063,
+      0.36934387598406004,
+      0.9679410254460827
+    ]
   }
 }
