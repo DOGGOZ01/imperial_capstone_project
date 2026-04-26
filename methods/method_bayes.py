@@ -4,7 +4,7 @@ from scipy.stats import norm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel as C, Matern
 from sklearn.preprocessing import MinMaxScaler
-from utils import sobol_sample, get_bounds, clip_to_bounds
+from utils import sobol_sample, clip_to_bounds
 from config import KAPPA, N_CANDIDATES, N_RESTARTS, ACQ_FUNC
 
 
@@ -35,11 +35,14 @@ def method_bayes(
     best_x_known: np.ndarray | None = None,  
 ) -> np.ndarray:
 
-    lower_bounds, upper_bounds = get_bounds(X)
     dims = X.shape[1]
+    lower_bounds = np.zeros(dims)
+    upper_bounds = np.ones(dims)
 
+    # Fit scaler on unit hypercube so it acts as identity on [0,1]^D
     x_scaler = MinMaxScaler()
-    X_scaled = x_scaler.fit_transform(X)
+    x_scaler.fit(np.vstack([lower_bounds, upper_bounds]))
+    X_scaled = x_scaler.transform(X)
 
     length_scale_lower = max(1e-3, 0.05 / np.sqrt(dims))
     length_scale_upper = min(1000.0, 20.0 * np.sqrt(dims))

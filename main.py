@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 from datetime import datetime
 
@@ -6,6 +7,18 @@ from config import BASE_PATH, RUN_LOG, RUN_PREV_LOG, PLOTS_DIR, METHOD_PER_FUNCT
 from logger import rotate_logs, RunLogger
 from utils import format_output
 from dispatcher import run_method
+
+ORACLE_HISTORY_FILE = 'oracle_history.json'
+
+def load_oracle_history(folder: str) -> tuple[np.ndarray | None, np.ndarray | None]:
+    if not os.path.exists(ORACLE_HISTORY_FILE):
+        return None, None
+    with open(ORACLE_HISTORY_FILE, 'r') as f:
+        data = json.load(f)
+    entry = data.get(folder)
+    if not entry:
+        return None, None
+    return np.array(entry['inputs']), np.array(entry['outputs'])
 
 rotate_logs()
 logger = RunLogger(RUN_LOG)
@@ -27,6 +40,12 @@ for i in range(1, 9):
 
     X_data = np.load(x_path)
     y_data = np.load(y_path)
+
+    X_hist, y_hist = load_oracle_history(folder)
+    if X_hist is not None:
+        X_data = np.vstack([X_data, X_hist])
+        y_data = np.concatenate([y_data, y_hist])
+
     dims = X_data.shape[1]
     num_points = len(y_data)
     method = METHOD_PER_FUNCTION.get(folder, DEFAULT_METHOD)

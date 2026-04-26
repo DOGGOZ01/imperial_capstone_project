@@ -7,7 +7,7 @@ from methods.method_grid import method_grid
 from methods.method_bayes import method_bayes
 from methods.method_surrogate import method_surrogate
 from methods.method_manual import method_manual
-from config import N_GRID, N_RANDOM
+from config import N_GRID, N_RANDOM, KAPPA_PER_FUNCTION
 
 HISTORY_FILE = 'history.json'
 
@@ -31,7 +31,8 @@ def get_history_entry(folder_name: str) -> dict:
     return load_history().get(folder_name, {})
 
 
-def update_history(folder_name: str, recommended_x: np.ndarray, data_best_y: float):
+def update_history(folder_name: str, recommended_x: np.ndarray, data_best_y: float,
+                   X: np.ndarray, y: np.ndarray):
     history = load_history()
     if folder_name not in history:
         history[folder_name] = {}
@@ -40,6 +41,7 @@ def update_history(folder_name: str, recommended_x: np.ndarray, data_best_y: flo
 
     if data_best_y > prev_best:
         history[folder_name]['best_value'] = float(data_best_y)
+        history[folder_name]['best_x'] = X[np.argmax(y)].tolist()
         history[folder_name]['was_improved'] = True
     else:
         history[folder_name]['was_improved'] = False
@@ -66,17 +68,16 @@ def should_use_tight_search(folder_name: str, data_best_y: float) -> bool:
 
 def get_search_center(folder_name: str, X: np.ndarray, y: np.ndarray) -> np.ndarray:
     entry = get_history_entry(folder_name)
-    if 'recommended_x' in entry:
-        return np.array(entry['recommended_x'])
+    # Use the actual best observed point, not the model's last recommendation
     if 'best_x' in entry and entry['best_x'] is not None:
         return np.array(entry['best_x'])
     return X[np.argmax(y)]
 
 
-def adaptive_bayes_params(dims: int, num_points: int) -> tuple[str, float]:
-    if num_points < 20 or dims >= 6:
-        return 'ucb', KAPPA + (1.0 if dims >= 6 else 0.0)
-    return 'ei', KAPPA
+def adaptive_bayes_params(folder_name: str, dims: int, num_points: int) -> tuple[str, float]:
+    kappa = KAPPA_PER_FUNCTION.get(folder_name, KAPPA)
+    acq = 'ucb' if (num_points < 20 or dims >= 6) else 'ei'
+    return acq, kappa
 
 
 def run_method(method: str, X: np.ndarray, y: np.ndarray,
@@ -87,45 +88,45 @@ def run_method(method: str, X: np.ndarray, y: np.ndarray,
 
     if method == 'random':
         result = method_random(X, y)
-        update_history(folder_name, result, data_best_y)
+        update_history(folder_name, result, data_best_y, X, y)
         return result, f"random (n={N_RANDOM})"
 
     elif method == 'grid':
         points_per_dim = int(round(N_GRID ** (1.0 / dims)))
         result = method_grid(X, y)
-        update_history(folder_name, result, data_best_y)
+        update_history(folder_name, result, data_best_y, X, y)
         return result, f"grid ({points_per_dim}^{dims}≈{points_per_dim**dims})"
 
     elif method == 'bayes':
-        acq_type, kappa_val = adaptive_bayes_params(dims, num_points)
+        acq_type, kappa_val = adaptive_bayes_params(folder_name, dims, num_points)
         tight = should_use_tight_search(folder_name, data_best_y)
         center = get_search_center(folder_name, X, y) if tight else None
         result = method_bayes(
             X, y, kappa=kappa_val, acq_func=acq_type,
             tight_search=tight, best_x_known=center,
         )
-        update_history(folder_name, result, data_best_y)
+        update_history(folder_name, result, data_best_y, X, y)
         return result, f"bayes/{acq_type}({'tight' if tight else 'global'}) κ={kappa_val:.2f}"
 
     elif method == 'auto':
         if dims <= 3:
             result = method_grid(X, y)
-            update_history(folder_name, result, data_best_y)
+            update_history(folder_name, result, data_best_y, X, y)
             return result, "auto/grid"
-        acq_type, kappa_val = adaptive_bayes_params(dims, num_points)
+        acq_type, kappa_val = adaptive_bayes_params(folder_name, dims, num_points)
         tight = should_use_tight_search(folder_name, data_best_y)
         center = get_search_center(folder_name, X, y) if tight else None
         result = method_bayes(
             X, y, kappa=kappa_val, acq_func=acq_type,
             tight_search=tight, best_x_known=center,
         )
-        update_history(folder_name, result, data_best_y)
+        update_history(folder_name, result, data_best_y, X, y)
         return result, f"auto/bayes({'tight' if tight else 'global'}) κ={kappa_val:.2f}"
 
     elif method == 'surrogate':
         model_name = 'GradBoost' if num_points >= 20 else 'RandomForest'
         result = method_surrogate(X, y)
-        update_history(folder_name, result, data_best_y)
+        update_history(folder_name, result, data_best_y, X, y)
         return result, f"surrogate ({model_name})"
 
     elif method == 'manual':
