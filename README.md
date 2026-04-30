@@ -48,6 +48,7 @@ The solver in `dispatcher.py` reads per-function method assignments from `config
 | `method_grid.py` | Builds a uniform grid over the input space and scores every point with UCB via GP. |
 | `method_bayes.py` | Fits a GP, generates Sobol candidates and refines the top ones. Supports global (broad) and tight (local) search modes. Always searches the full [0,1]^D domain. |
 | `method_surrogate.py` | Replaces the GP with a gradient boosted tree. Searches the full [0,1]^D domain via Sobol candidates. |
+| `method_neural.py` | PyTorch MLP surrogate with MC Dropout. Trains on accumulated data, then uses 50 stochastic forward passes over Sobol candidates to estimate UCB. |
 | `method_manual.py` | Debug tool which saves scatter plots for visual inspection. |
 | `dispatcher.py` | Routes each function to its method, detects stagnation, adjusts search parameters and logs results. Tracks best observed point separately from the model recommendation. |
 | `utils.py` | Shared helpers: Sobol sampling, output formatting, point clipping. |
@@ -107,4 +108,29 @@ Several structural improvements were made based on analysis of four weeks of res
 | function_8 | 1.5 | Best pattern found in week 1, preserve and refine |
 
 **All functions switched to Bayesian optimisation.** Functions 4, 6 and 8 previously used tree-based surrogates which do not support tight search. Switching to `method_bayes.py` for all functions ensures that stagnating functions benefit from focused local search rather than continuing to explore randomly.
+
+### Round 5 - Neural Surrogate, Per-Function GP Tuning, and Log Transform
+
+Several targeted improvements based on analysis of four weeks of accumulated data:
+
+**Neural surrogate for functions 7 and 8.** A new `method_neural.py` module introduces a PyTorch MLP with MC Dropout as a surrogate model. The network is a three-hidden-layer architecture (64 → 64 → 32 → 1) with 15% dropout. After training, dropout is kept active and 50 forward passes are run over Sobol candidates to estimate both mean and uncertainty. UCB is then applied to these estimates. MC Dropout is a practical approximation of Bayesian inference in neural networks: keeping dropout active at inference time causes the network to behave as an ensemble, giving a cheap uncertainty estimate without requiring a GP. Functions 7 (D=6) and 8 (D=8) are the most complex and have the most accumulated data, making them good candidates for a higher-capacity model. If PyTorch is not installed, the method falls back to `method_surrogate`.
+
+**Log transform for function_1.** Function 1 outputs are near-zero across almost the entire domain, with a narrow spike at the true maximum. A GP fit directly on these near-zero values has very little signal to work with. `main.py` now applies a log transform to function_1 outputs before fitting (`log(y)` for positive values, `-300` for non-positive). This spreads the response surface and makes the peak much more visible to the GP.
+
+**Richer per-function GP configuration.** Four new dictionaries were added to `config.py` to give each function its own GP hyperparameters:
+
+| Parameter | Purpose |
+|---|---|
+| `GP_ALPHA_PER_FUNCTION` | Per-function GP noise level (alpha). Higher for noisy functions (f2), lower for deterministic ones. |
+| `MATERN_NU_PER_FUNCTION` | Matern smoothness: `nu=2.5` for smooth unimodal landscapes, `nu=1.5` for rough multi-modal ones. |
+| `N_CANDIDATES_PER_FUNCTION` | Override candidate count per function. Function_1 uses 8192 for finer coverage of its narrow peak. |
+| `TIGHT_RADIUS_SCALE` | Multiplier on the tight search radius `0.15/sqrt(D)`. Functions 3 and 4 use 0.6 to focus more tightly. |
+
+**Periodic global resets.** A new `GLOBAL_SEARCH_INTERVAL` dict in `config.py` controls how many consecutive tight searches are allowed before forcing a global reset. Function_2 resets every 3 tight iterations (many local peaks), function_3 every 4 (risk of corner trap). This is tracked via `tight_count` in `history.json`.
+
+**Improved stagnation detection.** The previous tight-search trigger was based on a relative improvement ratio, which was sensitive to scale. It is now replaced with a simple `no_improvement_streak` counter: tight search activates after 2 consecutive rounds without improvement. The counter is reset to zero whenever a new best is found, and is stored in `history.json` alongside `tight_count`.
+
+**GP scaler removed from `method_bayes`.** The `MinMaxScaler` that was applied to GP inputs has been removed. Since all inputs already live in `[0, 1]^D` by construction, the scaler was a no-op that added complexity without benefit. The GP now fits and predicts directly on the raw `[0,1]` values, and the L-BFGS-B optimiser uses `[(0,1)]^D` bounds directly.
+
+**Tight search candidates switched to Sobol.** Previously, tight search used Gaussian noise around the centre, which could cluster candidates near the mean. It now uses Sobol samples shifted and scaled to the tight window, giving better uniform coverage of the local neighbourhood.
 

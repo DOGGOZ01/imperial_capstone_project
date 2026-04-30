@@ -3,7 +3,7 @@ import json
 import numpy as np
 from datetime import datetime
 
-from config import BASE_PATH, RUN_LOG, RUN_PREV_LOG, PLOTS_DIR, METHOD_PER_FUNCTION, DEFAULT_METHOD
+from config import BASE_PATH, RUN_LOG, RUN_PREV_LOG, PLOTS_DIR, METHOD_PER_FUNCTION, DEFAULT_METHOD, LOG_TRANSFORM_FUNCTIONS
 from logger import rotate_logs, RunLogger
 from utils import format_output
 from dispatcher import run_method
@@ -25,7 +25,7 @@ logger = RunLogger(RUN_LOG)
 
 COL_W = 40
 header = f"{'Function':<12} | {'D':<3} | {'N':<5} | {'Method & params':<{COL_W}} | Recommended point"
-separator = "─" * (12 + 3 + 5 + COL_W + 60)
+separator = "-" * (12 + 3 + 5 + COL_W + 60)
 logger.log(header)
 logger.log(separator)
 
@@ -46,6 +46,10 @@ for i in range(1, 9):
         X_data = np.vstack([X_data, X_hist])
         y_data = np.concatenate([y_data, y_hist])
 
+    if folder in LOG_TRANSFORM_FUNCTIONS:
+        positive_mask = y_data > 0
+        y_data = np.where(positive_mask, np.log(y_data), -300.0)
+
     dims = X_data.shape[1]
     num_points = len(y_data)
     method = METHOD_PER_FUNCTION.get(folder, DEFAULT_METHOD)
@@ -60,8 +64,8 @@ logger.log("")
 logger.log(f"# Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 logger.close()
 
-print(f"\n→ Results: '{RUN_LOG}'")
+print(f"\n-> Results: '{RUN_LOG}'")
 if os.path.exists(RUN_PREV_LOG):
-    print(f"→ Previous run: '{RUN_PREV_LOG}'")
+    print(f"-> Previous run: '{RUN_PREV_LOG}'")
 if os.path.exists(PLOTS_DIR) and os.listdir(PLOTS_DIR):
-    print(f"→ Scatter plots: '{PLOTS_DIR}/'")
+    print(f"-> Scatter plots: '{PLOTS_DIR}/'")
