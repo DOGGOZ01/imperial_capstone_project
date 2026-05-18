@@ -27,14 +27,14 @@ METHOD_PER_FUNCTION = {
     'function_4': 'bayes',
     'function_5': 'bayes',
     'function_6': 'bayes',
-    'function_7': 'neural',   # PyTorch MLP surrogate for ML hyperparameter tuning
-    'function_8': 'neural',   # PyTorch MLP surrogate for high-dimensional ML model
+    'function_7': 'neural',     # PyTorch MLP surrogate for ML hyperparameter tuning
+    'function_8': 'surrogate',  # back to GBDT — neural gave only +0.17% at N=46
 }
 
 # UCB exploration coefficient per function
 KAPPA_PER_FUNCTION = {
     'function_1': 6.0, 
-    'function_2': 1.5, 
+    'function_2': 2.0,  # raised from 1.5 — stochastic function needs broader exploration
     'function_3': 1.5,
     'function_4': 1.5,  
     'function_5': 1.5,  
@@ -92,6 +92,18 @@ TIGHT_RADIUS_SCALE = {
 GLOBAL_SEARCH_INTERVAL = {
     'function_2': 3,
     'function_3': 4,
+}
+
+# Minimum no_improvement_streak before switching to tight search (default 2)
+#   f2: stochastic outputs — streak of 2 is too aggressive, need more evidence
+TIGHT_STREAK_THRESHOLD = {
+    'function_2': 4,
+}
+
+# Per-function acquisition function override
+#   f2: Thompson Sampling — robust for noisy/multimodal, no kappa to tune
+ACQ_FUNC_PER_FUNCTION = {
+    'function_2': 'ts',
 }
 
 LOG_TRANSFORM_FUNCTIONS = {'function_1'}

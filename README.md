@@ -134,3 +134,21 @@ Several targeted improvements based on analysis of four weeks of accumulated dat
 
 **Tight search candidates switched to Sobol.** Previously, tight search used Gaussian noise around the centre, which could cluster candidates near the mean. It now uses Sobol samples shifted and scaled to the tight window, giving better uniform coverage of the local neighbourhood.
 
+### Round 6 - Thompson Sampling, Per-Function Acquisition, and Surrogate Reversion
+
+Changes based on analysis of Round 5 results, where functions 2, 4, and 6 regressed due to a first-run initialisation issue that sent them into global search mode before the `no_improvement_streak` counter was populated.
+
+**Thompson Sampling for function_2.** A new acquisition option `acq_func='ts'` was added to `method_bayes.py`. Thompson Sampling draws one sample from the GP posterior using `gp.sample_y()` and returns the argmax over candidates. Unlike UCB or EI, it requires no kappa to tune and naturally balances exploration and exploitation through posterior uncertainty. It is particularly well suited to stochastic or multimodal functions where UCB/EI can get overconfident. The L-BFGS-B optimisation loop is skipped entirely for TS — the candidate argmax is the result. Function_2 (described as a noisy ML model with many local peaks) is the first function assigned TS via the new `ACQ_FUNC_PER_FUNCTION` dict in `config.py`.
+
+**Per-function acquisition override.** `ACQ_FUNC_PER_FUNCTION` in `config.py` allows any function to bypass the default `ucb`/`ei` selection logic in `adaptive_bayes_params` and use a fixed acquisition function. This is cleaner than adding special cases to the dispatcher.
+
+**Per-function tight-search threshold.** The hardcoded `no_improvement_streak >= 2` trigger was replaced with a `TIGHT_STREAK_THRESHOLD` dict (default 2). Function_2 is set to 4: its stochastic outputs mean two rounds without improvement is weak evidence for a true plateau, so more patience before switching to local search is warranted.
+
+**Function_8 reverted to GBDT surrogate.** Function_8 produced only a marginal +0.17% improvement with the neural surrogate in Round 5. At N=46 data points, a gradient-boosted tree is typically more stable than an MLP — trees do not overfit as aggressively at small N and do not require hyperparameter tuning of the training procedure. Function_7 stays on the neural surrogate since it showed a meaningful +8.9% improvement.
+
+**Tight-search bounds safety clip.** After the L-BFGS-B optimisation loop, the result is now explicitly clipped to the tight window bounds. This prevents rare numerical edge cases where the optimiser exits the tight region by a small margin.
+
+**GP kernel diagnostics.** A `verbose` flag and `_log_kernel()` helper were added to `method_bayes.py`. When enabled, the optimised kernel parameters (constant scale, per-dimension length scales, log marginal likelihood) are printed after each GP fit. A warning is emitted if any length scale is at its optimisation boundary, which indicates the GP kernel may be misspecified for that function.
+
+**Kappa raised for function_2.** Kappa was increased from 1.5 to 2.0 to give broader exploration for the noisy landscape. This applies when TS is not active (e.g. during a forced global reset round).
+

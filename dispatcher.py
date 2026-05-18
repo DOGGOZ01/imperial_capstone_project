@@ -5,7 +5,7 @@ from config import (
     KAPPA, N_GRID, N_RANDOM,
     KAPPA_PER_FUNCTION, GP_ALPHA_PER_FUNCTION, MATERN_NU_PER_FUNCTION,
     N_CANDIDATES_PER_FUNCTION, TIGHT_RADIUS_SCALE, GLOBAL_SEARCH_INTERVAL,
-    FORCE_GLOBAL,
+    FORCE_GLOBAL, TIGHT_STREAK_THRESHOLD, ACQ_FUNC_PER_FUNCTION,
 )
 from methods.method_random    import method_random
 from methods.method_grid      import method_grid
@@ -65,7 +65,7 @@ def update_history(folder_name: str, recommended_x: np.ndarray, data_best_y: flo
     save_history(history)
 
 
-def should_use_tight_search(folder_name: str, data_best_y: float) -> bool:
+def should_use_tight_search(folder_name: str) -> bool:
     if folder_name in FORCE_GLOBAL:
         return False
 
@@ -77,7 +77,8 @@ def should_use_tight_search(folder_name: str, data_best_y: float) -> bool:
     if interval is not None and entry.get('tight_count', 0) >= interval:
         return False
 
-    return entry.get('no_improvement_streak', 0) >= 2
+    threshold = TIGHT_STREAK_THRESHOLD.get(folder_name, 2)
+    return entry.get('no_improvement_streak', 0) >= threshold
 
 
 def get_search_center(folder_name: str, X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -89,7 +90,10 @@ def get_search_center(folder_name: str, X: np.ndarray, y: np.ndarray) -> np.ndar
 
 def adaptive_bayes_params(folder_name: str, dims: int, num_points: int) -> tuple[str, float]:
     kappa = KAPPA_PER_FUNCTION.get(folder_name, KAPPA)
-    acq   = 'ucb' if (num_points < 20 or dims >= 6) else 'ei'
+    if folder_name in ACQ_FUNC_PER_FUNCTION:
+        acq = ACQ_FUNC_PER_FUNCTION[folder_name]
+    else:
+        acq = 'ucb' if (num_points < 20 or dims >= 6) else 'ei'
     return acq, kappa
 
 
@@ -112,7 +116,7 @@ def run_method(method: str, X: np.ndarray, y: np.ndarray,
 
     elif method == 'bayes':
         acq_type, kappa_val = adaptive_bayes_params(folder_name, dims, num_points)
-        tight        = should_use_tight_search(folder_name, data_best_y)
+        tight        = should_use_tight_search(folder_name)
         center       = get_search_center(folder_name, X, y) if tight else None
         radius_scale = TIGHT_RADIUS_SCALE.get(folder_name, 1.0)
         gp_alpha     = GP_ALPHA_PER_FUNCTION.get(folder_name, 1e-8)
@@ -124,6 +128,7 @@ def run_method(method: str, X: np.ndarray, y: np.ndarray,
             tight_search=tight, best_x_known=center,
             tight_radius_scale=radius_scale,
             gp_alpha=gp_alpha, matern_nu=matern_nu,
+            verbose=True, label=folder_name,
         )
         if n_cands:
             kwargs['n_candidates'] = n_cands
@@ -149,7 +154,7 @@ def run_method(method: str, X: np.ndarray, y: np.ndarray,
             update_history(folder_name, result, data_best_y, X, y)
             return result, "auto/grid"
         acq_type, kappa_val = adaptive_bayes_params(folder_name, dims, num_points)
-        tight        = should_use_tight_search(folder_name, data_best_y)
+        tight        = should_use_tight_search(folder_name)
         center       = get_search_center(folder_name, X, y) if tight else None
         radius_scale = TIGHT_RADIUS_SCALE.get(folder_name, 1.0)
         result = method_bayes(
