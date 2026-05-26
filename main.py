@@ -47,8 +47,9 @@ for i in range(1, 9):
         y_data = np.concatenate([y_data, y_hist])
 
     if folder in LOG_TRANSFORM_FUNCTIONS:
-        positive_mask = y_data > 0
-        y_data = np.where(positive_mask, np.log(y_data), -300.0)
+        log_vals = np.where(y_data > 0, np.log(y_data), np.nan)
+        finite_min = np.nanmin(log_vals) if np.any(np.isfinite(log_vals)) else 0.0
+        y_data = np.where(y_data > 0, np.log(y_data), finite_min - 10.0)
 
     dims = X_data.shape[1]
     num_points = len(y_data)

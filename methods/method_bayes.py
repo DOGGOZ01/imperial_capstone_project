@@ -69,7 +69,7 @@ def method_bayes(
         kernel=kernel,
         alpha=gp_alpha,
         normalize_y=True,
-        n_restarts_optimizer=15,
+        n_restarts_optimizer=8,
     )
     gp.fit(X, y)  # X is already in [0,1]
 
