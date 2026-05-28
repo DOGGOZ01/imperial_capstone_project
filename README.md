@@ -169,3 +169,44 @@ Changes driven by analysis of Round 6 results, where functions 7 and 8 regressed
 **Log transform outlier fix for function_1.** The previous implementation mapped non-positive outputs to a fixed value of -300. Since all other log-transformed values in the dataset fall in approximately [-33, -34], this created a single point approximately 265 standard deviations below the mean, which severely distorted the GP's normalisation. Non-positive outputs are now mapped to `finite_min - 10`, where `finite_min` is the minimum finite log value in the dataset. This keeps all training values on a consistent scale.
 
 **GP optimiser restarts reduced from 15 to 8.** Profiling showed that 15 restarts added significant runtime without meaningfully changing the optimised kernel parameters. Eight restarts are sufficient for the kernel hyperparameter landscape encountered in these functions.
+
+### Round 8 - Global Search for Function 1, Dimensionality Reduction for Function 5 and Differential Evolution
+
+Changes driven by analysis of oracle results across all eight rounds, by identifying a log-space bug in function_1 history tracking and by observing that the tight search for function_5 could be simplified to a 1D problem.
+
+**Function_1 returned to global search.** In Round 7, function_1 was moved into tight search around [0.728, 0.734] on the assumption that the true maximum was in that region. After comparing results with other approaches, it became clear that all eight oracle submissions returned near-zero values and that the tight region was almost certainly not near the true maximum. Function_1 is now back in `FORCE_GLOBAL` with `kappa=4.0` to encourage exploration of the full domain. The tight search radius setting is left in config for reference but has no effect while FORCE_GLOBAL is active.
+
+**Log-space bug fixed for function_1.** Since Round 5, `main.py` applies a log transform to function_1 outputs before passing them to the solver. The GP and `update_history` therefore work with log-scale values, which are large negative numbers. However, `history.json` still stored `best_value = 1.587e-15` from the original scale, set before the log transform was introduced. The comparison `data_best_y > prev_best` always failed because log-scale values (around -34) are numerically less than 1.587e-15, so `history.json` never updated for function_1 after Round 5. The stored value has been corrected to -34.076, which is `log(1.587e-15)`, and `no_improvement_streak` has been reset to allow the history to update correctly from this round onward.
+
+**Function_5 reduced to a 1D problem.** Across eight rounds, x2, x3 and x4 were consistently confirmed at 1.0 for the best observed outputs. Rather than fitting a 4D GP that must model three effectively constant dimensions, a new `FIXED_DIMS` dictionary in `config.py` specifies which dimensions are pinned to fixed values. The dispatcher slices the training matrix to the free dimensions, fits the GP on that reduced input space and reconstructs the full-dimensional recommendation before returning. For function_5 this means the GP trains on x1 alone, which substantially improves surrogate accuracy and acquisition function precision for refining a single variable.
+
+**Alternative search centre for function_3.** Function_3 has not improved since round three. Rather than triggering a full global reset after prolonged stagnation, which risks discarding the region around the best observed point, a new `ALTERNATIVE_CENTER` mechanism shifts the tight search to the second best observed point [0.568, 0.715, 0.441] once `no_improvement_streak` exceeds a configurable threshold. This preserves local search discipline while escaping the current trapped region.
+
+**Differential Evolution added as acquisition function optimiser.** `method_bayes.py` now accepts a `local_optimizer` parameter. The default remains `lbfgsb` (L-BFGS-B multi-start). Setting it to `de` uses `scipy.optimize.differential_evolution` instead, which searches the acquisition function globally over the given bounds rather than from multiple local starting points. DE is less sensitive to the initial population and does not require gradient information, making it better suited to multimodal or high-dimensional acquisition surfaces. The `LOCAL_OPT_PER_FUNCTION` dictionary in `config.py` assigns DE to function_1 (global search, unknown landscape) and functions 7 and 8 (high-dimensional tight search where L-BFGS-B consistently found the same local optimum).
+
+**Tight search parameters tightened across several functions.** Based on analysis of eight rounds of results, the following radius and kappa values were revised:
+
+| Function | Change | Reason |
+|---|---|---|
+| function_2 | Radius 1.5 to 0.5 | Thompson Sampling was jumping far from best [0.676, 0.537] |
+| function_4 | Radius 0.6 to 0.3 | Sharper focus around confirmed best [0.373, 0.401, 0.409, 0.403] |
+| function_6 | Added to TIGHT_STREAK_THRESHOLD=0 | Exploit new best -0.234 immediately after global reset |
+| function_7 | Radius 1.0 to 0.8 | Slight reduction to keep search closer to best |
+| function_8 | Kappa 2.5 to 1.0, radius 1.0 to 0.3 | x6 was consistently drifting away from known optimal value 0.461 |
+
+**Global search intervals extended.** To prevent premature global resets that waste evaluations on functions with well-identified best regions, `GLOBAL_SEARCH_INTERVAL` was updated:
+
+| Function | Old interval | New interval |
+|---|---|---|
+| function_2 | 3 | 8 |
+| function_3 | 4 | 8 |
+| function_4 | 10 | 20 |
+
+**Visual diagnostics added to `method_manual.py`.** The manual mode previously saved only per-dimension scatter plots. It now generates three additional images per function:
+
+- `_table.png` - all observed points sorted by output value, colour-coded from best to worst.
+- `_parallel.png` - parallel coordinates plot with lines coloured by output rank, showing which input combinations produced high outputs.
+- `_heatmap.png` (2D functions only) - GP mean prediction and uncertainty on an 80x80 grid, with observed points overlaid.
+- `_pairplot.png` (3D and above) - scatter matrix of all pairwise dimension projections, with the best observed point marked.
+
+**`--manual` flag added to `main.py`.** Running `python main.py --manual` switches all functions to `method_manual` for one run, generating the full set of diagnostic images without modifying the submission recommendations. Running `python main.py` without the flag uses the configured method per function as before.

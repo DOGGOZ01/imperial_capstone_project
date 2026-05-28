@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, differential_evolution
 from scipy.stats import norm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel as C, Matern
@@ -49,6 +49,7 @@ def method_bayes(
     tight_radius_scale: float = 1.0,
     gp_alpha: float = 1e-8,
     matern_nu: float = 2.5,
+    local_optimizer: str = 'lbfgsb',
     verbose: bool = False,
     label: str = '',
 ) -> np.ndarray:
@@ -114,23 +115,36 @@ def method_bayes(
     means, stds = gp.predict(candidates, return_std=True)
     acq_values = ucb(means, stds, kappa) if acq_func == 'ucb' else ei(means, stds, current_best_y)
 
-    top_idx = np.argsort(acq_values)[-n_restarts:]
-    best_starts = np.vstack([candidates[top_idx], center.reshape(1, -1)])
-
-    best_acq = -np.inf
-    best_x = center.copy()
-
-    for start in best_starts:
-        result = minimize(
-            acq_negative, start,
-            args=(gp, kappa, current_best_y, acq_func),
-            method='L-BFGS-B',
+    if local_optimizer == 'de':
+        de_result = differential_evolution(
+            acq_negative,
             bounds=bounds_opt,
-            options={'maxiter': 300, 'ftol': 1e-12},
+            args=(gp, kappa, current_best_y, acq_func),
+            maxiter=400,
+            tol=1e-10,
+            seed=42,
+            polish=True,
+            init='sobol',
         )
-        if -result.fun > best_acq:
-            best_acq = -result.fun
-            best_x = result.x
+        best_x = de_result.x
+    else:
+        top_idx = np.argsort(acq_values)[-n_restarts:]
+        best_starts = np.vstack([candidates[top_idx], center.reshape(1, -1)])
+
+        best_acq = -np.inf
+        best_x = center.copy()
+
+        for start in best_starts:
+            result = minimize(
+                acq_negative, start,
+                args=(gp, kappa, current_best_y, acq_func),
+                method='L-BFGS-B',
+                bounds=bounds_opt,
+                options={'maxiter': 300, 'ftol': 1e-12},
+            )
+            if -result.fun > best_acq:
+                best_acq = -result.fun
+                best_x = result.x
 
     if tight_search and tight_lb is not None:
         best_x = np.clip(best_x, tight_lb, tight_ub)

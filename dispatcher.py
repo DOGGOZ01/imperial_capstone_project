@@ -6,6 +6,7 @@ from config import (
     KAPPA_PER_FUNCTION, GP_ALPHA_PER_FUNCTION, MATERN_NU_PER_FUNCTION,
     N_CANDIDATES_PER_FUNCTION, TIGHT_RADIUS_SCALE, GLOBAL_SEARCH_INTERVAL,
     FORCE_GLOBAL, TIGHT_STREAK_THRESHOLD, ACQ_FUNC_PER_FUNCTION,
+    FIXED_DIMS, ALTERNATIVE_CENTER, ALTERNATIVE_CENTER_STREAK, LOCAL_OPT_PER_FUNCTION,
 )
 from methods.method_random    import method_random
 from methods.method_grid      import method_grid
@@ -83,6 +84,11 @@ def should_use_tight_search(folder_name: str) -> bool:
 
 def get_search_center(folder_name: str, X: np.ndarray, y: np.ndarray) -> np.ndarray:
     entry = get_history_entry(folder_name)
+    streak = entry.get('no_improvement_streak', 0)
+    alt_threshold = ALTERNATIVE_CENTER_STREAK.get(folder_name, 9999)
+    if streak >= alt_threshold and folder_name in ALTERNATIVE_CENTER:
+        print(f"  [{folder_name}] streak={streak} >= {alt_threshold} — switching to alternative centre")
+        return np.array(ALTERNATIVE_CENTER[folder_name])
     if 'best_x' in entry and entry['best_x'] is not None:
         return np.array(entry['best_x'])
     return X[np.argmax(y)]
@@ -122,21 +128,42 @@ def run_method(method: str, X: np.ndarray, y: np.ndarray,
         gp_alpha     = GP_ALPHA_PER_FUNCTION.get(folder_name, 1e-8)
         matern_nu    = MATERN_NU_PER_FUNCTION.get(folder_name, 2.5)
         n_cands      = N_CANDIDATES_PER_FUNCTION.get(folder_name, None)
+        local_opt    = LOCAL_OPT_PER_FUNCTION.get(folder_name, 'lbfgsb')
 
         kwargs = dict(
             kappa=kappa_val, acq_func=acq_type,
             tight_search=tight, best_x_known=center,
             tight_radius_scale=radius_scale,
             gp_alpha=gp_alpha, matern_nu=matern_nu,
+            local_optimizer=local_opt,
             verbose=True, label=folder_name,
         )
         if n_cands:
             kwargs['n_candidates'] = n_cands
 
-        result = method_bayes(X, y, **kwargs)
+        fixed_map = FIXED_DIMS.get(folder_name, {})
+        if fixed_map:
+            free_dims = [d for d in range(dims) if d not in fixed_map]
+            X_gp = X[:, free_dims]
+            if center is not None:
+                kwargs['best_x_known'] = center[free_dims]
+            result_free = method_bayes(X_gp, y, **kwargs)
+            result = np.empty(dims)
+            free_idx = 0
+            for d in range(dims):
+                if d in fixed_map:
+                    result[d] = fixed_map[d]
+                else:
+                    result[d] = result_free[free_idx]
+                    free_idx += 1
+            dim_note = f'/free{len(free_dims)}D'
+        else:
+            result = method_bayes(X, y, **kwargs)
+            dim_note = ''
+
         update_history(folder_name, result, data_best_y, X, y, used_tight=tight)
         mode = 'tight' if tight else 'global'
-        return result, f"bayes/{acq_type}({mode}) k={kappa_val:.2f} a={gp_alpha:.0e} nu={matern_nu}"
+        return result, f"bayes/{acq_type}({mode}){dim_note} k={kappa_val:.2f} a={gp_alpha:.0e} nu={matern_nu} opt={local_opt}"
 
     elif method == 'neural':
         kappa_val = KAPPA_PER_FUNCTION.get(folder_name, KAPPA)

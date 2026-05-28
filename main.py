@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import numpy as np
 from datetime import datetime
@@ -7,6 +8,8 @@ from config import BASE_PATH, RUN_LOG, RUN_PREV_LOG, PLOTS_DIR, METHOD_PER_FUNCT
 from logger import rotate_logs, RunLogger
 from utils import format_output
 from dispatcher import run_method
+
+MANUAL_MODE = '--manual' in sys.argv
 
 ORACLE_HISTORY_FILE = 'oracle_history.json'
 
@@ -53,7 +56,7 @@ for i in range(1, 9):
 
     dims = X_data.shape[1]
     num_points = len(y_data)
-    method = METHOD_PER_FUNCTION.get(folder, DEFAULT_METHOD)
+    method = 'manual' if MANUAL_MODE else METHOD_PER_FUNCTION.get(folder, DEFAULT_METHOD)
 
     try:
         next_point, desc = run_method(method, X_data, y_data, folder)
