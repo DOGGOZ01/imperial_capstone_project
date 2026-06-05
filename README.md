@@ -6,6 +6,11 @@ This project focuses on Black-Box Optimisation (BBO). Eight unknown functions ne
 
 BBO is relevant to a wide range of real-world problems, including hyperparameter tuning, drug discovery and materials design. Any scenario where evaluations are expensive and the objective cannot be inspected directly falls into this category. The core challenge across all of these is deciding when to explore new regions of the search space versus refining what already looks promising.
 
+## Documentation
+
+- [Datasheet](doc/datasheet.md) - dataset composition, collection process, preprocessing and intended use
+- [Model Card](doc/model_card.md) - optimisation approach, per-round strategy evolution, performance and limitations
+
 ---
 
 ## Inputs and Outputs
@@ -210,3 +215,13 @@ Changes driven by analysis of oracle results across all eight rounds, by identif
 - `_pairplot.png` (3D and above) - scatter matrix of all pairwise dimension projections, with the best observed point marked.
 
 **`--manual` flag added to `main.py`.** Running `python main.py --manual` switches all functions to `method_manual` for one run, generating the full set of diagnostic images without modifying the submission recommendations. Running `python main.py` without the flag uses the configured method per function as before.
+
+### Round 9 - Kappa Adjustment for Function 7 and Global Reset Removal for Function 8
+
+Changes based on analysis of Round 8 results, where the Differential Evolution acquisition optimiser and the 1D dimensionality reduction for function 5 produced the first sustained improvement on that function, and tight search on functions 6 and 7 continued converging toward new bests.
+
+**Kappa raised for function 7.** After Round 8, DE converged to the same local region in the 6D search space on consecutive tight-search rounds. Kappa was raised from 1.5 to 2.0 to increase the uncertainty bonus in the UCB acquisition function and encourage exploration of slightly different areas within the tight window on each round.
+
+**Global reset interval removed for function 8.** The periodic global reset for function 8 was removed after reset rounds consistently produced outputs near 9.3, well below the tight search best of 9.90. At 49 observations across 8 dimensions, a global Sobol search spreads candidates too thinly to outperform the known good region, making the reset counterproductive.
+
+Three functions found new bests from this round's submissions. Function 5 reached 4443.3 at [0.152, 1.0, 1.0, 1.0], confirming the upward trend in the first dimension under the 1D GP. Function 6 reached -0.234 at [0.417, 0.358, 0.610, 0.973, 0.074], the best result on that function across all rounds. Function 7 reached 2.566 at [0.010, 0.223, 0.483, 0.207, 0.329, 0.742].
