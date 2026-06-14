@@ -9,7 +9,7 @@ ACQ_FUNC    = 'ucb'
 DEFAULT_METHOD = 'bayes'
 
 
-FORCE_GLOBAL = {'function_1'}
+FORCE_GLOBAL = set()
 
 METHOD_PER_FUNCTION = {
     'function_1': 'bayes',
@@ -77,13 +77,13 @@ GLOBAL_SEARCH_INTERVAL = {
 }
 
 TIGHT_STREAK_THRESHOLD = {
-    
-    'function_2': 4,   
-    'function_4': 0,  
-    'function_5': 0,  
-    'function_6': 0,   
-    'function_7': 0, 
-    'function_8': 0,  
+    'function_2': 0,
+    'function_3': 0,
+    'function_4': 0,
+    'function_5': 0,
+    'function_6': 0,
+    'function_7': 0,
+    'function_8': 0,
 }
 
 ACQ_FUNC_PER_FUNCTION = {

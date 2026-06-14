@@ -216,7 +216,7 @@ Changes driven by analysis of oracle results across all eight rounds, by identif
 
 **`--manual` flag added to `main.py`.** Running `python main.py --manual` switches all functions to `method_manual` for one run, generating the full set of diagnostic images without modifying the submission recommendations. Running `python main.py` without the flag uses the configured method per function as before.
 
-### Round 9 - Kappa Adjustment for Function 7 and Global Reset Removal for Function 8
+### Round 9 and 10 - Kappa Adjustment for Function 7 and Global Reset Removal for Function 8
 
 Changes based on analysis of Round 8 results, where the Differential Evolution acquisition optimiser and the 1D dimensionality reduction for function 5 produced the first sustained improvement on that function, and tight search on functions 6 and 7 continued converging toward new bests.
 
@@ -225,3 +225,13 @@ Changes based on analysis of Round 8 results, where the Differential Evolution a
 **Global reset interval removed for function 8.** The periodic global reset for function 8 was removed after reset rounds consistently produced outputs near 9.3, well below the tight search best of 9.90. At 49 observations across 8 dimensions, a global Sobol search spreads candidates too thinly to outperform the known good region, making the reset counterproductive.
 
 Three functions found new bests from this round's submissions. Function 5 reached 4443.3 at [0.152, 1.0, 1.0, 1.0], confirming the upward trend in the first dimension under the 1D GP. Function 6 reached -0.234 at [0.417, 0.358, 0.610, 0.973, 0.074], the best result on that function across all rounds. Function 7 reached 2.566 at [0.010, 0.223, 0.483, 0.207, 0.329, 0.742].
+
+### Round 11 - Alternative Centre Trigger, Function 1 Tight Search and Final Config Hardening
+
+**Function 3 alternative centre activated.** After fifteen rounds without improvement in the [0.966, 0.941, 0.448] region, the `ALTERNATIVE_CENTER_STREAK` threshold was reached and tight search shifted to [0.568, 0.715, 0.441]. The oracle returned -0.00852, the best result on this function across all rounds and roughly three times better than the previous best of -0.0246. This confirmed that the earlier cluster was a local optimum and the alternative region contains a meaningfully better basin.
+
+**Function 1 removed from `FORCE_GLOBAL`.** After ten rounds of global search with no oracle query returning a value better than the initial dataset point at [0.728, 0.734], function_1 was removed from `FORCE_GLOBAL`. The final round uses tight search centred on [0.728, 0.734] to refine near the only known high-output region.
+
+**`TIGHT_STREAK_THRESHOLD` set to 0 for all remaining functions.** Functions 3, 6 and 7 previously had default thresholds that allowed one or two global rounds after a new best was found. Setting all thresholds to 0 ensures every function enters tight search immediately, with no wasted evaluations on global rounds after the best regions are confirmed.
+
+Four functions improved in this round. Function 2 reached 0.7628 at [0.709, 0.635]. Function 5 reached 4452.2 at [0.227, 1.0, 1.0, 1.0], its best result across all rounds. Function 7 reached 2.6248 at [0.0, 0.174, 0.434, 0.256, 0.288, 0.745]. Function 8 reached 9.9169 at [0.125, 0.057, 0.108, 0.0, 1.0, 0.429, 0.152, 0.158].
