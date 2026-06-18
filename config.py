@@ -60,13 +60,13 @@ N_CANDIDATES_PER_FUNCTION = {
 }
 
 TIGHT_RADIUS_SCALE = {
-    'function_1': 0.15,  
-    'function_3': 0.25, 
-    'function_4': 0.3,   
-    'function_5': 1.0,   
-    'function_6': 0.4,   
-    'function_7': 0.8,   
-    'function_8': 0.3,   
+    'function_1': 0.3,  
+    'function_3': 0.25,
+    'function_4': 0.3,
+    'function_5': 1.0,
+    'function_6': 0.4,
+    'function_7': 0.8,
+    'function_8': 0.3,
 }
 
 GLOBAL_SEARCH_INTERVAL = {
@@ -77,6 +77,7 @@ GLOBAL_SEARCH_INTERVAL = {
 }
 
 TIGHT_STREAK_THRESHOLD = {
+    'function_1': 0,  
     'function_2': 0,
     'function_3': 0,
     'function_4': 0,
@@ -87,7 +88,10 @@ TIGHT_STREAK_THRESHOLD = {
 }
 
 ACQ_FUNC_PER_FUNCTION = {
-    'function_2': 'ts', 
+    'function_1': 'ei',  
+    'function_2': 'ei',  
+    'function_7': 'ei',  
+    'function_8': 'ei',  
 }
 
 LOG_TRANSFORM_FUNCTIONS = {'function_1'}
