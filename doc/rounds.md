@@ -174,7 +174,7 @@ Three functions found new bests from this round's submissions. Function 5 reache
 
 **`TIGHT_STREAK_THRESHOLD` set to 0 for all remaining functions.** Functions 3, 6 and 7 previously had default thresholds that allowed one or two global rounds after a new best was found. Setting all thresholds to 0 ensures every function enters tight search immediately, with no wasted evaluations on global rounds after the best regions are confirmed.
 
-Four functions improved in this round. Function 2 reached 0.7628 at [0.709, 0.635]. Function 5 reached 4452.2 at [0.227, 1.0, 1.0, 1.0], its best result across all rounds. Function 7 reached 2.6248 at [0.0, 0.174, 0.434, 0.256, 0.288, 0.745]. Function 8 reached 9.9169 at [0.125, 0.057, 0.108, 0.0, 1.0, 0.429, 0.152, 0.158].
+Five functions improved this round. Function 2 reached 0.7628 at [0.709, 0.635]. Function 3 reached -0.00852 from its newly activated alternative centre, as described above. Function 6 reached -0.2225 at [0.444, 0.355, 0.637, 0.946, 0.069]. Function 7 reached 2.6248 at [0.0, 0.174, 0.434, 0.256, 0.288, 0.745]. Function 8 reached 9.9169 at [0.125, 0.057, 0.108, 0.0, 1.0, 0.429, 0.152, 0.158].
 
 ### Round 12 - Function 2 Off Thompson Sampling, Function 1 Locked Into Tight Search
 
@@ -182,6 +182,16 @@ Four functions improved in this round. Function 2 reached 0.7628 at [0.709, 0.63
 
 **Function_1 added to `TIGHT_STREAK_THRESHOLD=0` and its tight radius widened.** `TIGHT_RADIUS_SCALE['function_1']` moved from 0.15 to 0.3, doubling the local search window around the best point. Function_1's signal is so close to flat that a narrow radius risks sampling noise indistinguishable from the peak. Combined with `TIGHT_STREAK_THRESHOLD=0`, function_1 now stays in tight mode permanently rather than alternating with global rounds.
 
-**New bests from this round's submissions.** Function_1 improved from -34.076 to -23.42711 on the log scale (raw output about 6.69e-11) at [0.71209, 0.71809], still within the same narrow neighbourhood as before. Function_4 jumped from 0.5597 to 0.7306640198500962 at [0.366364, 0.358133, 0.413088, 0.415806], a roughly 30% gain and the largest single-round improvement recorded for that function. Function_6 edged up from -0.2225 to -0.2214023578798504 at [0.470474, 0.370138, 0.609772, 0.919501, 0.069183], a marginal refinement of the same basin found in Round 9.
+**New bests from this round's submissions.** Function_1 improved from -34.076 to -23.42711 on the log scale (raw output about 6.69e-11) at [0.71209, 0.71809], still within the same narrow neighbourhood as before. Function_4 jumped from 0.5597 to 0.7306640198500962 at [0.366364, 0.358133, 0.413088, 0.415806], a roughly 30% gain and the largest single-round improvement recorded for that function up to this point. Function_5 reached 4457.2925 at [0.25, 1.0, 1.0, 1.0], continuing its steady climb in the free dimension. Function_6 edged up from -0.2225 to -0.2214023578798504 at [0.470474, 0.370138, 0.609772, 0.919501, 0.069183], a marginal refinement of the same basin found in Round 9. Function_8 reached 9.9192502179124 at [0.109575, 0.072627, 0.091607, 0.0, 1.0, 0.413314, 0.168227, 0.174274].
+
+### Week 13 - Largest Single-Week Change of the Project
+
+The config from Round 12 (function_2 back to EI, function_1's tight radius widened) generated the week 13 submissions. The results were the most significant of the whole project.
+
+**Function_1 jumped roughly 16,900-fold.** The oracle returned 1.1338e-06 at [0.701999, 0.686270], compared to the previous best of 6.6945e-11 at [0.71209, 0.71809] found in Round 12. Both points sit in the same neighbourhood (x1 near 0.70-0.71, x2 near 0.69-0.72), so this reads as the tight search finally resolving the true peak rather than a jump to a different region. On the log scale used for training, this moves the best value from -23.427 to -13.690.
+
+**Three more functions improved.** Function_3 reached -0.006896049688374402 at [0.524353, 0.755634, 0.440917], a further refinement of the alternative centre found in Round 11. Function_5 reached 4463.919723736304 at [0.273265, 1.0, 1.0, 1.0], continuing its climb in the free dimension. Function_7 reached 2.750158545240856 at [0.038351, 0.211799, 0.446783, 0.258855, 0.323400, 0.748524]. Function_8 reached 9.9298181522144 at [0.093665, 0.088537, 0.107517, 0.0, 1.0, 0.429224, 0.184137, 0.190184].
+
+**Three functions did not improve.** Function_2 returned 0.6625781624422553, function_4 returned 0.4448996362390045 and function_6 returned -0.3743545226655401, all below their respective best values. No configuration change has yet been made in response to these results; that will be Round 13's task.
 
 Current config and history state is in [config.py](../config.py) and [history.json](../history.json). See [results.md](results.md) for the full best-value table and per-function shape analysis.

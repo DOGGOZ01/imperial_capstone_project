@@ -1,17 +1,17 @@
 {
   "function_1": {
-    "best_value": -23.42711,
-    "was_improved": false,
+    "best_value": -13.68994,
+    "was_improved": true,
     "best_x": [
-      0.71209,
-      0.71809
+      0.701999,
+      0.686270
     ],
     "recommended_x": [
-      0.7019986324496529,
-      0.6862701948467063
+      0.701999,
+      0.686270
     ],
-    "tight_count": 3,
-    "no_improvement_streak": 3
+    "tight_count": 4,
+    "no_improvement_streak": 0
   },
   "function_2": {
     "best_value": 0.7627824265102815,
@@ -21,27 +21,27 @@
       0.635351
     ],
     "recommended_x": [
-      0.7038415953529732,
-      0.541036172903122
+      0.70874,
+      0.635351
     ],
-    "tight_count": 3,
-    "no_improvement_streak": 5
+    "tight_count": 4,
+    "no_improvement_streak": 2
   },
   "function_3": {
-    "best_value": -0.00852262525602089,
-    "was_improved": false,
+    "best_value": -0.006896049688374402,
+    "was_improved": true,
     "best_x": [
-      0.546004,
-      0.733983,
-      0.462568
+      0.524353,
+      0.755634,
+      0.440917
     ],
     "recommended_x": [
-      0.5243533649053891,
-      0.755633635094611,
-      0.440917364905389
+      0.524353,
+      0.755634,
+      0.440917
     ],
-    "tight_count": 3,
-    "no_improvement_streak": 5
+    "tight_count": 4,
+    "no_improvement_streak": 0
   },
   "function_4": {
     "best_value": 0.7306640198500962,
@@ -53,31 +53,31 @@
       0.415806
     ],
     "recommended_x": [
-      0.36651782798049043,
-      0.3404554253634271,
-      0.431456893831462,
-      0.4221862906207187
+      0.366364,
+      0.358133,
+      0.413088,
+      0.415806
     ],
-    "tight_count": 5,
-    "no_improvement_streak": 3
+    "tight_count": 6,
+    "no_improvement_streak": 1
   },
   "function_5": {
-    "best_value": 4457.2925,
-    "was_improved": false,
+    "best_value": 4463.919723736304,
+    "was_improved": true,
     "best_x": [
-      0.25,
+      0.273265,
       1.0,
       1.0,
       1.0
     ],
     "recommended_x": [
-      0.2732646295301861,
+      0.273265,
       1.0,
       1.0,
       1.0
     ],
-    "tight_count": 5,
-    "no_improvement_streak": 3
+    "tight_count": 6,
+    "no_improvement_streak": 0
   },
   "function_6": {
     "best_value": -0.2214023578798504,
@@ -90,61 +90,61 @@
       0.069183
     ],
     "recommended_x": [
-      0.49730681572999746,
-      0.3622703673993774,
-      0.5829391842700025,
-      0.9319182331612514,
-      0.07426197264427371
+      0.470474,
+      0.370138,
+      0.609772,
+      0.919501,
+      0.069183
     ],
-    "tight_count": 3,
-    "no_improvement_streak": 3
+    "tight_count": 4,
+    "no_improvement_streak": 1
   },
   "function_7": {
-    "best_value": 2.6247709519741456,
-    "was_improved": false,
+    "best_value": 2.750158545240856,
+    "was_improved": true,
     "best_x": [
-      0.0,
-      0.173557,
-      0.433928,
-      0.255867,
-      0.288136,
-      0.745027
+      0.038351,
+      0.211799,
+      0.446783,
+      0.258855,
+      0.3234,
+      0.748524
     ],
     "recommended_x": [
-      0.0383505410936679,
-      0.21179934590700045,
-      0.44678337339491836,
-      0.25885514699522877,
-      0.3234004653738455,
-      0.7485239996878671
+      0.038351,
+      0.211799,
+      0.446783,
+      0.258855,
+      0.3234,
+      0.748524
     ],
-    "tight_count": 12,
-    "no_improvement_streak": 5
+    "tight_count": 13,
+    "no_improvement_streak": 0
   },
   "function_8": {
-    "best_value": 9.9192502179124,
-    "was_improved": false,
+    "best_value": 9.9298181522144,
+    "was_improved": true,
     "best_x": [
-      0.109575,
-      0.072627,
-      0.091607,
+      0.093665,
+      0.088537,
+      0.107517,
       0.0,
       1.0,
-      0.413314,
-      0.168227,
-      0.174274
+      0.429224,
+      0.184137,
+      0.190184
     ],
     "recommended_x": [
-      0.09366510558797912,
-      0.08853689742435972,
-      0.10751690135344963,
-      3.5970247266869926e-10,
-      0.9999999996545255,
-      0.4292238918394852,
-      0.18413690210913392,
-      0.19018390228551477
+      0.093665,
+      0.088537,
+      0.107517,
+      0.0,
+      1.0,
+      0.429224,
+      0.184137,
+      0.190184
     ],
-    "tight_count": 5,
-    "no_improvement_streak": 3
+    "tight_count": 6,
+    "no_improvement_streak": 0
   }
 }

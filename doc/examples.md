@@ -13,13 +13,13 @@ A real run looks like this:
 ```
 Function     | D   | N     | Method & params                          | Recommended point
 ------------------------------------------------------------------------------------------------------------------------
-function_1   | 2   | 20    | bayes/ei(tight) k=4.00 a=1e-04 nu=2.5 opt=de | 0.712090-0.718090
-function_2   | 2   | 20    | bayes/ts(tight) k=2.00 a=5e-02 nu=1.5 opt=lbfgsb | 0.714368-0.695519
-function_5   | 4   | 30    | bayes/ei(tight)/free1D k=1.50 a=1e-06 nu=2.5 opt=lbfgsb | 0.250000-1.000000-1.000000-1.000000
-function_8   | 8   | 50    | bayes/ucb(tight) k=1.00 a=1e-04 nu=1.5 opt=de | 0.109575-0.072627-0.091607-0.000000-1.000000-0.413314-0.168227-0.174274
+function_1   | 2   | 23    | bayes/ei(tight) k=4.00 a=1e-04 nu=2.5 opt=de | 0.712090-0.718090
+function_2   | 2   | 23    | bayes/ts(tight) k=2.00 a=5e-02 nu=1.5 opt=lbfgsb | 0.714368-0.695519
+function_5   | 4   | 33    | bayes/ei(tight)/free1D k=1.50 a=1e-06 nu=2.5 opt=lbfgsb | 0.250000-1.000000-1.000000-1.000000
+function_8   | 8   | 53    | bayes/ucb(tight) k=1.00 a=1e-04 nu=1.5 opt=de | 0.109575-0.072627-0.091607-0.000000-1.000000-0.413314-0.168227-0.174274
 ```
 
-`N` is the point count after merging initial data with oracle history (function_8 shows 50 because it started with 40 and has 10 recorded oracle rounds). The method column reads as `bayes/<acquisition>(<mode>)[/free<k>D] k=<kappa> a=<gp alpha> nu=<matern nu> opt=<local optimiser>`. `/free1D` on function_5 means the GP trained on 1 free dimension after the other 3 were pinned by `FIXED_DIMS`. The recommended point is the hyphen-separated string ready to submit to the oracle, in the same format the oracle itself expects: `0.547332-0.244532` for a D=2 function.
+`N` is the point count after merging initial data with oracle history (function_8 shows 53 because it started with 40 and has 13 recorded oracle weeks). The method column reads as `bayes/<acquisition>(<mode>)[/free<k>D] k=<kappa> a=<gp alpha> nu=<matern nu> opt=<local optimiser>`. `/free1D` on function_5 means the GP trained on 1 free dimension after the other 3 were pinned by `FIXED_DIMS`. The recommended point is the hyphen-separated string ready to submit to the oracle, in the same format the oracle itself expects: `0.547332-0.244532` for a D=2 function.
 
 ## Manual diagnostics mode
 
@@ -57,11 +57,11 @@ Overwrites `history.json` with `{'best_value': 0.0, 'was_improved': True}` for a
 
 ```json
 "function_5": {
-  "best_value": 4457.2925,
-  "best_x": [0.25, 1.0, 1.0, 1.0],
-  "recommended_x": [0.2732646295301861, 1.0, 1.0, 1.0],
-  "tight_count": 5,
-  "no_improvement_streak": 3
+  "best_value": 4463.919723736304,
+  "best_x": [0.273265, 1.0, 1.0, 1.0],
+  "recommended_x": [0.273265, 1.0, 1.0, 1.0],
+  "tight_count": 6,
+  "no_improvement_streak": 0
 }
 ```
 
